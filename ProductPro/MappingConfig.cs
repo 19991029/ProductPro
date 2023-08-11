@@ -1,0 +1,19 @@
+﻿using AutoMapper;
+using ProductPro.Models;
+using ProductPro.Models.Dto;
+
+namespace ProductPro
+{
+    public class MappingConfig:Profile
+    {
+        public MappingConfig() 
+        {
+            //CreateMap<Product, ProductDto>();
+            //CreateMap<ProductDto, Product>();
+
+            CreateMap<Product, ProductUpdateDto>().ReverseMap();
+            CreateMap<Product, ProductCreateDto>().ReverseMap();
+            CreateMap<Product, ProductDto>().ReverseMap();
+        }
+    }
+}
