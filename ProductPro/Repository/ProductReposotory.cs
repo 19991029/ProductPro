@@ -8,15 +8,15 @@ using System.Linq.Expressions;
 
 namespace productPro.Repository
 {
-    public class ProductRepository : IProductReposotory
+    public class ProductRepository : Reposotory<Product> , IProductReposotory
     {
         private readonly ProductDbContext _db;
 
-        public ProductRepository(ProductDbContext db)
+        public ProductRepository(ProductDbContext db): base(db) 
         {
             _db = db;
         }
-        public async Task Create(Product entity)
+      /*  public async Task Create(Product entity)
         {
             await _db.Products.AddAsync(entity);
             await Save();
@@ -36,9 +36,9 @@ namespace productPro.Repository
             }
             return await query.FirstOrDefaultAsync();
 
-        }
+        }*/
 
-        public async Task<List<Product>> GetAll(Expression<Func<Product, bool>> filter = null)
+      /*  public async Task<List<Product>> GetAll(Expression<Func<Product, bool>> filter = null)
         {
             IQueryable<Product> query = _db.Products;  //AsQueryable();
             if (filter != null)
@@ -58,12 +58,14 @@ namespace productPro.Repository
         public async Task Save()
         {
             await _db.SaveChangesAsync();
-        }
+        }*/
 
-        public async Task Update(Product entity)
+        public async Task<Product> UpdateAsync(Product entity)
         {
-            _db.Products.Update(entity);
-            await Save();
+             _db.Products.Update(entity);
+            await _db.SaveChangesAsync();
+            return entity;
+          //  await Save();
         }
     }
 }

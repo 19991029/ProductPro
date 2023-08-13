@@ -7,6 +7,7 @@ using ProductPro.logging;
 using ProductPro.Models;
 using ProductPro.Models.Dto;
 using ProductPro.Repository;
+using System.Net;
 
 namespace ProductPro.Controllers
 {
@@ -18,6 +19,7 @@ namespace ProductPro.Controllers
         //private readonly ProductDbContext db;
         private readonly IMapper mapper;
         private readonly IProductReposotory repo;
+        private Apiresponse _respons;
 
 
 
@@ -31,12 +33,14 @@ namespace ProductPro.Controllers
             //db = _Db;
             repo = _repo;
             mapper = _mapper;
+            _respons = new ();
         }
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllProducts()
         {
-            IEnumerable<Product> productList = await repo.GetAll();
+            IEnumerable<Product> productList = await repo.GetAllAsync();
             //Logger.Log("GetAllProducts","");
+            _respons.Result = productList;
 
             return Ok(mapper.Map<List<ProductDto>>(productList));
         }
@@ -45,19 +49,21 @@ namespace ProductPro.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(200)]
-        public ActionResult<ProductDto> GetProduct(int id)
+        public async Task< ActionResult<Apiresponse>> GetProduct(int id)
         {
             if (id == 0)
             {
-             //   Logger.Log("GetProduct" + id, "error");
+                //   Logger.Log("GetProduct" + id, "error");
                 return BadRequest();
             }
-            var Product = repo.Get(p => p.Id == id);
+            var Product = await repo.GetAsync(p => p.Id == id);
             if (Product == null)
             {
                 return NotFound();
             }
-            return Ok(mapper.Map<ProductDto>(Product));
+            _respons.Result = mapper.Map<ProductDto>(Product);
+            _respons.StatusCode = HttpStatusCode.OK;
+            return Ok(_respons);
 
 
         }
@@ -74,7 +80,7 @@ namespace ProductPro.Controllers
                 return BadRequest();
             }
 
-            if ((await repo.Get(p => p.Name == productDto.Name))!=null)
+            if ((await repo.GetAsync(p => p.Name == productDto.Name))!=null)
 
             {
                 ModelState.AddModelError("CustomError", "Product already exist");
@@ -93,7 +99,7 @@ namespace ProductPro.Controllers
             //    Name = productDto.Name
             //};
             Product model = mapper.Map<Product>(productDto);
-            await repo.Create(model);
+            await repo.CreateAsync(model);
            
             //var productdto = new ProductDto 
             //{
@@ -115,12 +121,12 @@ namespace ProductPro.Controllers
                 return BadRequest();
             }
 
-            var deleteproduct = await repo.Get(p => p.Id == id);
+            var deleteproduct = await repo.GetAsync(p => p.Id == id);
             if (deleteproduct == null)
             {
                 return NotFound();
             }
-            repo.Remove(deleteproduct);
+            repo.RemoveAsync(deleteproduct);
            
             return NoContent();
 
@@ -136,13 +142,13 @@ namespace ProductPro.Controllers
                 return BadRequest();
             }
 
-            var existingProduct = await repo.Get(p => p.Id == id);
+            var existingProduct = await repo.GetAsync(p => p.Id == id);
             if (existingProduct == null)
             {
                 return NotFound();
             }
 
-            if ((await repo.Get(p => p.Id != id && p.Name == productDto.Name))!=null)
+            if ((await repo.GetAsync(p => p.Id != id && p.Name == productDto.Name))!=null)
             {
                 ModelState.AddModelError("CustomError", "Product name already exists for another product.");
                 return BadRequest(ModelState);
@@ -157,7 +163,7 @@ namespace ProductPro.Controllers
             //Product modal = mapper.Map<Product>(existingProduct);
             existingProduct.Name = productDto.Name;
             // existingProduct.Name = updatedProductDto.Name;
-           repo.Update(existingProduct);
+           await repo.UpdateAsync(existingProduct);
            
             // You can update other properties as needed.
 
